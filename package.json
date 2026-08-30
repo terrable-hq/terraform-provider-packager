@@ -1,0 +1,8 @@
+{
+  "name": "@terrable-hq/packager-development",
+  "private": true,
+  "description": "Development dependencies for the Terrable Terraform packaging provider.",
+  "devDependencies": {
+    "rolldown": "1.2.6"
+  }
+}

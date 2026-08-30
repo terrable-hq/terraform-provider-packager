@@ -1,0 +1,6 @@
+.terrable/
+node_modules/
+terraform-provider-packager
+*.tfstate
+*.tfstate.*
+.terraform/
