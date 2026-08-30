@@ -7,8 +7,12 @@ description: |-
 
 # packager_bundle (Data Source)
 
-Bundles one JavaScript or TypeScript entrypoint with Rolldown and creates a
-deterministic AWS Lambda ZIP artifact.
+Bundles one JavaScript or TypeScript entrypoint with embedded esbuild and
+creates a deterministic AWS Lambda ZIP artifact containing CommonJS `index.js`.
+No external bundler or Node.js installation is required for bundling. Imported
+application dependencies must already be installed. Node built-ins remain
+external; native addons and extra asset files are not automatically packaged.
+Builds producing additional files (such as CSS) fail instead of omitting them.
 
 Packaging happens when Terraform reads the data source, normally during
 planning. CI systems that separate plan and apply should preserve the
@@ -33,7 +37,8 @@ data "packager_bundle" "handler" {
   to the Terraform process working directory.
 - `output_directory` (optional): artifact directory. Defaults to
   `.terrable/build` beneath `working_directory`.
-- `rolldown_path` (optional): explicit path to the Rolldown executable.
+- `rolldown_path` (optional, deprecated): ignored compatibility field for
+  v0.1.0 configurations. Remove it; esbuild is compiled into the provider.
 
 ## Attributes
 

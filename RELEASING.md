@@ -27,10 +27,10 @@ that its release workflow and GoReleaser configuration are expected.
 
 ## Local checks
 
-Install GoReleaser v2.18.0, Go, Node.js, npm, and Terraform, then run:
+Install GoReleaser v2.18.0, Go, Terraform, and Node.js (only for the runtime
+smoke test), then run:
 
 ```shell
-npm ci
 make ci
 make release-check
 make release-snapshot
@@ -38,7 +38,10 @@ make release-snapshot
 
 `release-snapshot` builds all six platform archives and a checksum file in
 `dist/`, then checks their names, embedded provider binaries, checksums, and
-protocol manifest. The manifest is hashed from the source file and receives
+protocol manifest. It also checks each platform binary's Go build metadata for
+the pinned esbuild dependency and requires its third-party notice in each ZIP.
+When updating esbuild, update `go.mod`, the release test and the third-party
+notice together. The manifest is hashed from the source file and receives
 its versioned filename during upload, so it is not copied into `dist/` by the
 snapshot. This target skips signing and publication, requires no release
 secrets, and does not create a Git tag or GitHub release. `dist/` is ignored by
@@ -75,8 +78,10 @@ releases are ingested through the Registry webhook. The Terraform provider
 source address remains `terrable-hq/packager` despite the GitHub repository's
 `terraform-provider-` prefix.
 
-Node.js and Rolldown remain consumer runtime dependencies. These release
-archives package the Go provider, not those external tools.
+esbuild is compiled into every platform's Go provider binary. Node.js and
+external bundlers are not required for packaging. Consumers must still make
+their handler's application dependencies available before Terraform runs.
+The embedded bundler's licence is included in `THIRD-PARTY-NOTICES.md`.
 
 See [HashiCorp's provider publishing guide](https://developer.hashicorp.com/terraform/registry/providers/publishing)
 for signing-key and Registry setup details.

@@ -1,26 +1,27 @@
 ---
 page_title: "Terrable Packager Provider"
 description: |-
-  Package JavaScript and TypeScript Lambda handlers with Rolldown, keeping build artifacts separate from source files.
+  Package JavaScript and TypeScript Lambda handlers with embedded esbuild, keeping build artifacts separate from source files.
 ---
 
 # Terrable Packager Provider
 
 The Terrable Packager provider builds JavaScript and TypeScript Lambda handlers
-with Rolldown and produces deterministic ZIP artifacts. Build output defaults
+with embedded esbuild and produces deterministic ZIP artifacts. Build output defaults
 to `.terrable/build`, which can be ignored with one `.terrable/` entry in your
 project's `.gitignore`.
 
 ## Requirements
 
-Node.js and Rolldown must be installed on the machine running Terraform. The
-provider first uses an explicit `rolldown_path`, then checks
-`node_modules/.bin/rolldown` beneath `working_directory`, then checks `PATH`.
-Node.js and Rolldown are not bundled with the provider release.
+The bundler is compiled into the provider: no external bundler or Node.js is
+required for packaging. Install your handler's imported application packages
+before running Terraform (typically with `npm ci`). Package installation,
+JavaScript bundler plugins/configuration and native-addon packaging are not
+performed by this provider. Lambda still needs its Node.js runtime.
 
-```shell
-npm install --save-dev rolldown
-```
+When upgrading from v0.1.0, remove `rolldown_path`; it is deprecated and ignored.
+The engine change updates generated JavaScript and ZIP hashes, while preserving
+the input/output interface and deterministic packaging for unchanged inputs.
 
 ## Example usage
 

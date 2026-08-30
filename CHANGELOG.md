@@ -2,6 +2,16 @@
 
 ## 30/08/2026
 
+- Replaced external Rolldown execution with esbuild v0.28.2 compiled into the
+  provider; bundling no longer needs Node.js, npm or a separately installed tool.
+- Preserved custom output directories, deterministic ZIPs and artifact outputs;
+  deprecated `rolldown_path` as an ignored compatibility field. Generated code
+  and hashes change once when upgrading from the Rolldown-backed release.
+- Added empty-PATH bundling and Terraform acceptance coverage, useful build-error
+  diagnostics, cancellation checks and a generated-handler execution test.
+- Removed provider-development npm dependencies and bundled esbuild's licence
+  notice; release checks verify esbuild is embedded in every platform binary.
+
 - Added GoReleaser v2.18.0 release packaging, signed draft-release automation,
   protocol-v6 Registry metadata, and cross-platform snapshot checks in CI.
 - Ensured CI installs the pinned GoReleaser binary for the shared local and

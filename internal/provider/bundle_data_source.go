@@ -25,7 +25,7 @@ type bundleDataSourceModel struct {
 	Size             types.Int64  `tfsdk:"size"`
 }
 
-// NewBundleDataSource returns the Rolldown bundle data source.
+// NewBundleDataSource returns the embedded esbuild bundle data source.
 func NewBundleDataSource() datasource.DataSource {
 	return &bundleDataSource{}
 }
@@ -36,7 +36,7 @@ func (d *bundleDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (d *bundleDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Bundles one JavaScript or TypeScript entrypoint with Rolldown and writes a deterministic Lambda ZIP artifact.",
+		MarkdownDescription: "Bundles one JavaScript or TypeScript entrypoint with embedded esbuild and writes a deterministic Lambda ZIP artifact. No external bundler or Node.js installation is required for bundling.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -56,7 +56,8 @@ func (d *bundleDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			},
 			"rolldown_path": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Explicit Rolldown executable. By default the provider checks `node_modules/.bin/rolldown` and then PATH.",
+				MarkdownDescription: "Deprecated compatibility field. Ignored: esbuild is compiled into the provider.",
+				DeprecationMessage:  "Remove rolldown_path. Bundling now uses embedded esbuild and this executable path is ignored.",
 			},
 			"artifact_path": schema.StringAttribute{
 				Computed:            true,
@@ -86,7 +87,7 @@ func (d *bundleDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		Entrypoint:       config.Entrypoint.ValueString(),
 		WorkingDirectory: optionalString(config.WorkingDirectory),
 		OutputDirectory:  optionalString(config.OutputDirectory),
-	}, bundle.RolldownRunner{Executable: optionalString(config.RolldownPath)})
+	}, bundle.EsbuildRunner{})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to package function", err.Error())
 		return

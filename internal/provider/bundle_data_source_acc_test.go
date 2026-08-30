@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,10 +20,10 @@ import (
 )
 
 func TestAccBundleDataSourceDefaultOutput(t *testing.T) {
-	workingDirectory, rolldownPath := prepareAcceptanceFixture(t)
+	workingDirectory := prepareAcceptanceFixture(t)
 
 	expectedArtifact := filepath.Join(workingDirectory, ".terrable", "build", "acceptance.zip")
-	config := acceptanceBundleConfig(workingDirectory, rolldownPath, "")
+	config := acceptanceBundleConfig(workingDirectory, "")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acceptanceProviderFactories(),
@@ -43,22 +43,56 @@ func TestAccBundleDataSourceDefaultOutput(t *testing.T) {
 }
 
 func TestAccBundleDataSourceCustomOutput(t *testing.T) {
-	workingDirectory, rolldownPath := prepareAcceptanceFixture(t)
+	workingDirectory := prepareAcceptanceFixture(t)
 
 	expectedArtifact := filepath.Join(workingDirectory, "artifacts", "lambda", "acceptance.zip")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acceptanceProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: acceptanceBundleConfig(workingDirectory, rolldownPath, "artifacts/lambda"),
+				Config: acceptanceBundleConfig(workingDirectory, "artifacts/lambda"),
 				Check:  acceptanceBundleChecks(expectedArtifact),
 			},
 		},
 	})
 }
 
-func prepareAcceptanceFixture(t *testing.T) (string, string) {
+func TestAccBundleDataSourceLegacyRolldownPath(t *testing.T) {
+	workingDirectory := prepareAcceptanceFixture(t)
+	config := strings.Replace(acceptanceBundleConfig(workingDirectory, ""),
+		`  name              = "acceptance"`,
+		`  name              = "acceptance"
+  rolldown_path = "/does/not/exist/rolldown"`, 1)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acceptanceProviderFactories(),
+		Steps: []resource.TestStep{{
+			Config: config,
+			Check:  acceptanceBundleChecks(filepath.Join(workingDirectory, ".terrable", "build", "acceptance.zip")),
+		}},
+	})
+}
+
+func prepareAcceptanceFixture(t *testing.T) string {
 	t.Helper()
+	if os.Getenv("TF_ACC") != "1" {
+		t.Skip("set TF_ACC=1 to run Terraform acceptance tests")
+	}
+	// Terraform remains a test prerequisite, but no Node.js, npm or bundler
+	// executable is visible while the provider packages the fixture.
+	terraformPath := os.Getenv("TF_ACC_TERRAFORM_PATH")
+	if terraformPath == "" {
+		var err error
+		terraformPath, err = exec.LookPath("terraform")
+		if err != nil {
+			t.Fatal("install Terraform or set TF_ACC_TERRAFORM_PATH")
+		}
+	}
+	terraformPath, err := filepath.Abs(terraformPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TF_ACC_TERRAFORM_PATH", terraformPath)
+	t.Setenv("PATH", t.TempDir())
 
 	repositoryRoot, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
@@ -68,16 +102,7 @@ func prepareAcceptanceFixture(t *testing.T) (string, string) {
 	workingDirectory := t.TempDir()
 	copyAcceptanceFixture(t, repositoryRoot, workingDirectory)
 
-	executableName := "rolldown"
-	if runtime.GOOS == "windows" {
-		executableName = "rolldown.cmd"
-	}
-	rolldownPath := filepath.Join(repositoryRoot, "node_modules", ".bin", executableName)
-	if _, err := os.Stat(rolldownPath); err != nil {
-		t.Fatalf("Rolldown is required for acceptance tests: %v", err)
-	}
-
-	return workingDirectory, rolldownPath
+	return workingDirectory
 }
 
 func acceptanceProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
@@ -86,7 +111,7 @@ func acceptanceProviderFactories() map[string]func() (tfprotov6.ProviderServer, 
 	}
 }
 
-func acceptanceBundleConfig(workingDirectory, rolldownPath, outputDirectory string) string {
+func acceptanceBundleConfig(workingDirectory, outputDirectory string) string {
 	outputConfiguration := ""
 	if outputDirectory != "" {
 		outputConfiguration = fmt.Sprintf("  output_directory  = %q\n", outputDirectory)
@@ -97,7 +122,6 @@ data "packager_bundle" "handler" {
   name              = "acceptance"
   entrypoint        = "src/handler.ts"
   working_directory = %q
-  rolldown_path     = %q
 %s
 }
 
@@ -108,7 +132,7 @@ resource "terraform_data" "bundle" {
     size           = data.packager_bundle.handler.size
   }
 }
-`, filepath.ToSlash(workingDirectory), filepath.ToSlash(rolldownPath), outputConfiguration)
+`, filepath.ToSlash(workingDirectory), outputConfiguration)
 }
 
 func acceptanceBundleChecks(expectedArtifact string) resource.TestCheckFunc {
@@ -174,7 +198,7 @@ func checkAcceptanceArtifact(path string) error {
 	if err != nil {
 		return fmt.Errorf("read index.js: %w", err)
 	}
-	if !strings.Contains(string(contents), "Hello from Rolldown") {
+	if !strings.Contains(string(contents), "Hello from Terrable") {
 		return fmt.Errorf("index.js does not contain the bundled fixture")
 	}
 	return nil

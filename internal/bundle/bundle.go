@@ -26,7 +26,7 @@ type Request struct {
 	OutputDirectory  string
 }
 
-// RunRequest describes the JavaScript bundle Rolldown must produce before it
+// RunRequest describes the JavaScript bundle the runner must produce before it
 // is placed in a deterministic Lambda ZIP archive.
 type RunRequest struct {
 	Entrypoint       string

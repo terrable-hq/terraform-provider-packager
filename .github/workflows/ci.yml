@@ -30,20 +30,18 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      - name: Set up Node.js
+      # Node executes the generated handler in the runtime smoke test only.
+      # Bundling and Terraform acceptance tests run with an empty PATH.
+      - name: Set up Node.js for runtime smoke test
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
-          cache: npm
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: 1.14.6
           terraform_wrapper: false
-
-      - name: Install Rolldown
-        run: npm ci
 
       - name: Run CI checks
         run: make ci
