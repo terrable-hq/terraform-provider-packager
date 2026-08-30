@@ -3,6 +3,7 @@ package bundle
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,14 @@ type fakeRunner struct {
 func (r *fakeRunner) Run(_ context.Context, request RunRequest) error {
 	r.request = request
 	return os.WriteFile(request.OutputFile, []byte(r.content), 0o644)
+}
+
+type errorRunner struct {
+	err error
+}
+
+func (r errorRunner) Run(_ context.Context, _ RunRequest) error {
+	return r.err
 }
 
 func TestBuildUsesTerrableBuildDirectoryByDefault(t *testing.T) {
@@ -117,5 +126,41 @@ func TestBuildProducesDeterministicArchive(t *testing.T) {
 	}
 	if first.Base64SHA256 != second.Base64SHA256 {
 		t.Fatalf("archive hashes differ: %q != %q", first.Base64SHA256, second.Base64SHA256)
+	}
+}
+
+func TestBuildRejectsInvalidArtifactName(t *testing.T) {
+	_, err := Build(context.Background(), Request{
+		Name:       "../outside",
+		Entrypoint: "handler.ts",
+	}, &fakeRunner{})
+	if err == nil {
+		t.Fatal("Build returned no error for an invalid artifact name")
+	}
+}
+
+func TestBuildCleansUpStagingFilesWhenBundlingFails(t *testing.T) {
+	workingDirectory := t.TempDir()
+	entrypoint := filepath.Join(workingDirectory, "handler.ts")
+	if err := os.WriteFile(entrypoint, []byte("export const handler = () => 'ok'"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Build(context.Background(), Request{
+		Name:             "broken",
+		Entrypoint:       entrypoint,
+		WorkingDirectory: workingDirectory,
+	}, errorRunner{err: errors.New("expected bundler failure")})
+	if err == nil {
+		t.Fatal("Build returned no error when the runner failed")
+	}
+
+	outputDirectory := filepath.Join(workingDirectory, ".terrable", "build")
+	entries, readErr := os.ReadDir(outputDirectory)
+	if readErr != nil {
+		t.Fatalf("read output directory: %v", readErr)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("output directory contains %d entries after failure, want 0", len(entries))
 	}
 }

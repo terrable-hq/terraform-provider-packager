@@ -1,5 +1,7 @@
 # Terrable Packager
 
+[![CI](https://github.com/terrable-hq/packager/actions/workflows/ci.yml/badge.svg)](https://github.com/terrable-hq/packager/actions/workflows/ci.yml)
+
 Terrable Packager is an experimental Terraform provider for producing AWS
 Lambda deployment artifacts from JavaScript and TypeScript entrypoints.
 
@@ -106,6 +108,17 @@ make test-integration
 `make test-integration` runs a real Rolldown build of the TypeScript fixture.
 The ordinary test suite uses an in-process fake runner and does not require
 Rolldown.
+
+Before opening a pull request, run the same aggregate gate used by GitHub
+Actions:
+
+```shell
+npm ci
+make ci
+```
+
+This checks formatting, runs the Go suite with the race detector, runs
+`go vet`, compiles the provider, and exercises the real Rolldown fixture.
 
 The provider is not published yet. For local Terraform development, build the
 binary and configure a Terraform CLI `dev_overrides` entry for
