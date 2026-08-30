@@ -4,6 +4,8 @@
 
 - Added GoReleaser v2.18.0 release packaging, signed draft-release automation,
   protocol-v6 Registry metadata, and cross-platform snapshot checks in CI.
+- Ensured CI installs the pinned GoReleaser binary for the shared local and
+  hosted snapshot command.
 - Updated Go module imports and project links for the renamed
   `terraform-provider-packager` repository; the Terraform source address
   remains `terrable-hq/packager`.
