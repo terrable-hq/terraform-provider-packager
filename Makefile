@@ -1,4 +1,4 @@
-.PHONY: build check-fmt ci fmt test test-integration test-race vet
+.PHONY: build check-fmt ci fmt test test-acceptance test-integration test-race vet
 
 build:
 	go build -o terraform-provider-packager .
@@ -18,7 +18,10 @@ test-race:
 vet:
 	go vet ./...
 
+test-acceptance:
+	TF_ACC=1 go test ./internal/provider -run '^TestAcc' -v -timeout 10m
+
 test-integration:
 	PACKAGER_INTEGRATION=1 go test ./internal/bundle -run TestRolldownBuildsTypeScriptLambdaArtifact -v
 
-ci: check-fmt test-race vet build test-integration
+ci: check-fmt test-race vet build test-integration test-acceptance

@@ -96,6 +96,7 @@ Requirements:
 
 - Go 1.25 or later.
 - Node.js and npm.
+- Terraform CLI for acceptance tests.
 
 Install the pinned integration-test dependency and run the suite:
 
@@ -103,6 +104,7 @@ Install the pinned integration-test dependency and run the suite:
 npm install
 make test
 make test-integration
+make test-acceptance
 ```
 
 `make test-integration` runs a real Rolldown build of the TypeScript fixture.
@@ -118,7 +120,11 @@ make ci
 ```
 
 This checks formatting, runs the Go suite with the race detector, runs
-`go vet`, compiles the provider, and exercises the real Rolldown fixture.
+`go vet`, compiles the provider, exercises the real Rolldown fixture, and runs
+Terraform Plugin Testing acceptance cases over protocol v6. The acceptance
+suite verifies both default and custom output directories, independently
+inspects each generated ZIP, checks its hash and size, and requires a repeated
+plan to be empty.
 
 The provider is not published yet. For local Terraform development, build the
 binary and configure a Terraform CLI `dev_overrides` entry for

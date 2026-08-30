@@ -11,3 +11,6 @@
   executable resolution, and the Terraform data-source schema.
 - Added GitHub Actions checks for formatting, race-tested unit tests, vetting,
   provider compilation, and a real Rolldown integration build.
+- Added Terraform Plugin Testing acceptance coverage over protocol v6 for
+  default and custom output directories, artifact contents, hashes, sizes, and
+  no-drift planning.
