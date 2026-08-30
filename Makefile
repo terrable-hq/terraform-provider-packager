@@ -1,4 +1,6 @@
-.PHONY: build check-fmt ci fmt test test-acceptance test-integration test-race vet
+GORELEASER ?= goreleaser
+
+.PHONY: build check-fmt ci fmt release-check release-snapshot test test-acceptance test-integration test-race vet
 
 build:
 	go build -o terraform-provider-packager .
@@ -25,3 +27,10 @@ test-integration:
 	PACKAGER_INTEGRATION=1 go test ./internal/bundle -run TestRolldownBuildsTypeScriptLambdaArtifact -v
 
 ci: check-fmt test-race vet build test-integration test-acceptance
+
+release-check:
+	$(GORELEASER) check --config .goreleaser.yml
+
+release-snapshot: release-check
+	$(GORELEASER) release --snapshot --clean --skip=sign --config .goreleaser.yml
+	PACKAGER_RELEASE_SNAPSHOT=1 go test ./tests/release -count=1 -v

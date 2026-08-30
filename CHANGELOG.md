@@ -2,6 +2,12 @@
 
 ## 30/08/2026
 
+- Added GoReleaser v2.18.0 release packaging, signed draft-release automation,
+  protocol-v6 Registry metadata, and cross-platform snapshot checks in CI.
+- Updated Go module imports and project links for the renamed
+  `terraform-provider-packager` repository; the Terraform source address
+  remains `terrable-hq/packager`.
+
 - Added the initial Terraform provider and `packager_bundle` data source.
 - Added Rolldown-backed TypeScript and JavaScript bundling for AWS Lambda.
 - Added deterministic ZIP artifacts under `.terrable/build` by default, with

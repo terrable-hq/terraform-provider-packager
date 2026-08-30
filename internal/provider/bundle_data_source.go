@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/terrable-hq/packager/internal/bundle"
+	"github.com/terrable-hq/terraform-provider-packager/internal/bundle"
 )
 
 var _ datasource.DataSource = (*bundleDataSource)(nil)

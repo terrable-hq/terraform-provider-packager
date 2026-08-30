@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	packagerprovider "github.com/terrable-hq/packager/internal/provider"
+	packagerprovider "github.com/terrable-hq/terraform-provider-packager/internal/provider"
 )
 
 var version = "dev"

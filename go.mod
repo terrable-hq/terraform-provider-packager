@@ -1,4 +1,4 @@
-module github.com/terrable-hq/packager
+module github.com/terrable-hq/terraform-provider-packager
 
 go 1.25.8
 

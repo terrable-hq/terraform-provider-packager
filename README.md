@@ -1,6 +1,6 @@
 # Terrable Packager
 
-[![CI](https://github.com/terrable-hq/packager/actions/workflows/ci.yml/badge.svg)](https://github.com/terrable-hq/packager/actions/workflows/ci.yml)
+[![CI](https://github.com/terrable-hq/terraform-provider-packager/actions/workflows/ci.yml/badge.svg)](https://github.com/terrable-hq/terraform-provider-packager/actions/workflows/ci.yml)
 
 Terrable Packager is an experimental Terraform provider for producing AWS
 Lambda deployment artifacts from JavaScript and TypeScript entrypoints.
@@ -94,7 +94,7 @@ planning. If plan and apply run on different machines, preserve
 
 Requirements:
 
-- Go 1.25 or later.
+- Go 1.25.8 or later.
 - Node.js and npm.
 - Terraform CLI for acceptance tests.
 
@@ -129,3 +129,11 @@ plan to be empty.
 The provider is not published yet. For local Terraform development, build the
 binary and configure a Terraform CLI `dev_overrides` entry for
 `terrable-hq/packager`.
+
+## Releases
+
+Tagged releases use GoReleaser v2.18.0 to build Linux, macOS, and Windows
+archives for AMD64 and ARM64, sign their checksums, and create a draft GitHub
+release. CI also builds unsigned snapshots without access to release secrets.
+See [RELEASING.md](RELEASING.md) for signing-key setup, checks, and the first
+Registry publication.

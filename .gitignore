@@ -4,3 +4,4 @@ terraform-provider-packager
 *.tfstate
 *.tfstate.*
 .terraform/
+dist/
