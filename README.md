@@ -5,10 +5,18 @@
 Terrable Packager is an experimental Terraform provider for producing AWS
 Lambda deployment artifacts from JavaScript and TypeScript entrypoints.
 
-The first slice uses [Rolldown](https://rolldown.rs/) to create a CommonJS
-bundle for Node.js and places it in a deterministic ZIP archive. Generated
+The [v0.2.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
+embeds [esbuild](https://esbuild.github.io/) through its native Go API to create
+a CommonJS bundle for Node.js and places it in a deterministic ZIP archive.
+No external bundler or Node.js installation is needed for bundling. Generated
 artifacts are written to `.terrable/build` by default, keeping build output
 away from handler source files and making the whole directory safe to ignore.
+
+**Release and branch status:** the esbuild implementation is present in the
+`v0.2.0` tag, but has not yet been integrated into `main`. The `main` branch
+still builds the older Rolldown implementation. Use the tagged release for
+embedded esbuild; see the [v0.2.0 development instructions](https://github.com/terrable-hq/terraform-provider-packager/blob/v0.2.0/README.md#development)
+when building that version from source.
 
 ## Current contract
 
@@ -68,9 +76,30 @@ The data source exposes:
   `aws_lambda_function.source_code_hash`.
 - `size`: artifact size in bytes.
 
-## Rolldown requirement
+## Bundling with v0.2.0
 
-The provider currently resolves Rolldown in this order:
+The bundler is compiled into the provider. The provider does not download or
+run a bundler executable, install npm packages, or execute JavaScript plugin
+configuration.
+
+Install your handler's application dependencies before running Terraform,
+typically with your application's `npm ci`. Node.js is needed to install and
+run/test those dependencies, but not for the provider's bundling step.
+Node built-ins stay external for the Lambda Node.js runtime. The ZIP contains
+one CommonJS `index.js` file (`index.handler` for a `handler` export).
+TypeScript is transpiled, not type-checked. Native addons and extra assets are
+not automatically packaged; builds that emit multiple files, such as CSS,
+fail rather than silently dropping files.
+
+When migrating from v0.1.0, remove `rolldown_path`: v0.2.0 retains it only as
+a deprecated, ignored compatibility field. Remove a Rolldown dev dependency
+if your application does not otherwise use it. Input paths, output attributes
+and ZIP layout are unchanged, but esbuild produces different JavaScript and
+artifact hashes, so expect a one-time Lambda code update.
+
+## Rolldown requirement for main and v0.1.0
+
+The older implementation on `main` and in v0.1.0 resolves Rolldown in this order:
 
 1. The explicit `rolldown_path` value.
 2. `node_modules/.bin/rolldown` beneath `working_directory`.
@@ -82,15 +111,21 @@ Install a project-local copy with:
 npm install --save-dev rolldown
 ```
 
-Packaging Rolldown with provider release archives is intentionally left for a
-separate slice. Until that is delivered, consumers need Node.js and Rolldown
-available where Terraform runs.
+This requirement does not apply to v0.2.0, which replaces Rolldown with
+embedded esbuild.
+
+## Artifact lifecycle
 
 The data source writes its artifact when Terraform reads it, normally during
 planning. If plan and apply run on different machines, preserve
 `.terrable/build` between those stages or rebuild the plan on the apply runner.
 
 ## Development
+
+These commands describe the current `main` branch, which still uses Rolldown.
+For the esbuild implementation, check out `v0.2.0` and follow its linked
+development instructions above; that version does not need npm dependencies
+for provider development.
 
 Requirements:
 
@@ -126,11 +161,14 @@ suite verifies both default and custom output directories, independently
 inspects each generated ZIP, checks its hash and size, and requires a repeated
 plan to be empty.
 
-The provider is not published yet. For local Terraform development, build the
-binary and configure a Terraform CLI `dev_overrides` entry for
-`terrable-hq/packager`.
+For local Terraform development, build the binary and configure a Terraform
+CLI `dev_overrides` entry for `terrable-hq/packager`.
 
 ## Releases
+
+Published GitHub prereleases are available for
+[v0.2.0 (embedded esbuild)](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
+and [v0.1.0 (external Rolldown)](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.1.0).
 
 Tagged releases use GoReleaser v2.18.0 to build Linux, macOS, and Windows
 archives for AMD64 and ARM64, sign their checksums, and create a draft GitHub
