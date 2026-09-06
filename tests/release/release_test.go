@@ -2,9 +2,12 @@ package release_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"crypto/sha256"
+	"debug/buildinfo"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -93,10 +96,36 @@ func checkArchive(t *testing.T, path, binaryName string) {
 		t.Fatal(err)
 	}
 	defer archive.Close()
+	foundBinary, foundNotice := false, false
 	for _, entry := range archive.File {
 		if entry.Name == binaryName && entry.UncompressedSize64 > 0 {
-			return
+			file, err := entry.Open()
+			if err != nil {
+				t.Fatal(err)
+			}
+			contents, err := io.ReadAll(file)
+			_ = file.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			info, err := buildinfo.Read(bytes.NewReader(contents))
+			if err != nil {
+				t.Fatalf("read build info from %s: %v", binaryName, err)
+			}
+			for _, dependency := range info.Deps {
+				if dependency.Path == "github.com/evanw/esbuild" && dependency.Version == "v0.28.2" {
+					foundBinary = true
+				}
+			}
+		}
+		if entry.Name == "THIRD-PARTY-NOTICES.md" && entry.UncompressedSize64 > 0 {
+			foundNotice = true
 		}
 	}
-	t.Fatalf("%s does not contain a non-empty %s at its root", path, binaryName)
+	if !foundBinary {
+		t.Errorf("%s must contain %s with esbuild v0.28.2 compiled in", path, binaryName)
+	}
+	if !foundNotice {
+		t.Errorf("%s must include THIRD-PARTY-NOTICES.md", path)
+	}
 }

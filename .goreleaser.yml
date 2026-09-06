@@ -24,6 +24,10 @@ archives:
   - formats:
       - zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    files:
+      - README.md
+      - CHANGELOG.md
+      - THIRD-PARTY-NOTICES.md
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
@@ -54,8 +58,9 @@ release:
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   header: |
     Terraform provider for packaging JavaScript and TypeScript Lambda handlers.
-    Node.js and a project-local or explicitly configured Rolldown are required
-    on the machine running Terraform; they are not included in these archives.
+    esbuild is compiled into the provider. No Node.js or external bundler is
+    needed for packaging. Install the handler's application dependencies before
+    running Terraform; package installation and native addons are not handled.
 
 changelog:
   disable: true

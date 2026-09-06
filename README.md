@@ -5,18 +5,11 @@
 Terrable Packager is an experimental Terraform provider for producing AWS
 Lambda deployment artifacts from JavaScript and TypeScript entrypoints.
 
-The [v0.2.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
-embeds [esbuild](https://esbuild.github.io/) through its native Go API to create
-a CommonJS bundle for Node.js and places it in a deterministic ZIP archive.
-No external bundler or Node.js installation is needed for bundling. Generated
-artifacts are written to `.terrable/build` by default, keeping build output
+The provider embeds [esbuild](https://esbuild.github.io/) v0.28.2 through its
+Go API to create a CommonJS bundle for Node.js and places it in a deterministic
+ZIP archive. No external bundler or Node.js installation is needed for bundling.
+Generated artifacts are written to `.terrable/build` by default, keeping build output
 away from handler source files and making the whole directory safe to ignore.
-
-**Release and branch status:** the esbuild implementation is present in the
-`v0.2.0` tag, but has not yet been integrated into `main`. The `main` branch
-still builds the older Rolldown implementation. Use the tagged release for
-embedded esbuild; see the [v0.2.0 development instructions](https://github.com/terrable-hq/terraform-provider-packager/blob/v0.2.0/README.md#development)
-when building that version from source.
 
 ## Current contract
 
@@ -76,45 +69,31 @@ The data source exposes:
   `aws_lambda_function.source_code_hash`.
 - `size`: artifact size in bytes.
 
-## Bundling with v0.2.0
+## Self-contained bundling
 
-The bundler is compiled into the provider. The provider does not download or
-run a bundler executable, install npm packages, or execute JavaScript plugin
-configuration.
+`terraform init` downloads a provider binary that includes the bundler. There
+is no bundler executable lookup, runtime tool download, npm install, or
+JavaScript configuration/plugin execution inside the provider.
 
-Install your handler's application dependencies before running Terraform,
-typically with your application's `npm ci`. Node.js is needed to install and
-run/test those dependencies, but not for the provider's bundling step.
-Node built-ins stay external for the Lambda Node.js runtime. The ZIP contains
-one CommonJS `index.js` file (`index.handler` for a `handler` export).
-TypeScript is transpiled, not type-checked. Native addons and extra assets are
-not automatically packaged; builds that emit multiple files, such as CSS,
-fail rather than silently dropping files.
+Your handler's imported packages must already be available, typically through
+your application's `npm ci` step. Node.js is needed for that installation and
+for running/testing the handler, but not for the provider's bundling step.
+Node built-ins stay external for the Lambda Node.js runtime. The current ZIP
+contract is one CommonJS `index.js` file (`index.handler` for a `handler` export).
+Native addons and extra assets are not automatically packaged; builds that
+emit multiple files, such as CSS, fail rather than silently dropping files.
+TypeScript is transpiled, not type-checked.
 
-When migrating from v0.1.0, remove `rolldown_path`: v0.2.0 retains it only as
-a deprecated, ignored compatibility field. Remove a Rolldown dev dependency
-if your application does not otherwise use it. Input paths, output attributes
-and ZIP layout are unchanged, but esbuild produces different JavaScript and
-artifact hashes, so expect a one-time Lambda code update.
+### Migrating from v0.1.0
 
-## Rolldown requirement for main and v0.1.0
+Remove `rolldown_path` from configuration. It is retained as a deprecated,
+ignored compatibility field; it no longer runs an executable. Remove a
+Rolldown dev dependency only if your application doesn't otherwise use it.
 
-The older implementation on `main` and in v0.1.0 resolves Rolldown in this order:
-
-1. The explicit `rolldown_path` value.
-2. `node_modules/.bin/rolldown` beneath `working_directory`.
-3. A `rolldown` executable on `PATH`.
-
-Install a project-local copy with:
-
-```shell
-npm install --save-dev rolldown
-```
-
-This requirement does not apply to v0.2.0, which replaces Rolldown with
-embedded esbuild.
-
-## Artifact lifecycle
+Input paths, `output_directory`, ZIP layout and output attributes are unchanged.
+The switch to esbuild changes generated JavaScript and therefore artifact
+hashes; expect a one-time Lambda code update. Repeated builds with the same
+inputs and provider version remain deterministic.
 
 The data source writes its artifact when Terraform reads it, normally during
 planning. If plan and apply run on different machines, preserve
@@ -122,53 +101,50 @@ planning. If plan and apply run on different machines, preserve
 
 ## Development
 
-These commands describe the current `main` branch, which still uses Rolldown.
-For the esbuild implementation, check out `v0.2.0` and follow its linked
-development instructions above; that version does not need npm dependencies
-for provider development.
-
 Requirements:
 
 - Go 1.25.8 or later.
-- Node.js and npm.
+- Node.js only for the generated-handler runtime smoke test.
 - Terraform CLI for acceptance tests.
 
-Install the pinned integration-test dependency and run the suite:
+Run the suite (no npm dependencies are needed for provider development):
 
 ```shell
-npm install
 make test
 make test-integration
 make test-acceptance
 ```
 
-`make test-integration` runs a real Rolldown build of the TypeScript fixture.
-The ordinary test suite uses an in-process fake runner and does not require
-Rolldown.
+`make test` exercises the real embedded bundler with an empty `PATH`, including
+TypeScript, local imports, installed-package imports, errors and reproducibility.
+`make test-integration` builds the TypeScript fixture with an empty `PATH`, then
+uses an explicitly located Node.js executable to invoke the generated handler
+and assert its response. Node is a test oracle, not a bundling dependency.
 
 Before opening a pull request, run the same aggregate gate used by GitHub
 Actions:
 
 ```shell
-npm ci
 make ci
 ```
 
 This checks formatting, runs the Go suite with the race detector, runs
-`go vet`, compiles the provider, exercises the real Rolldown fixture, and runs
+`go vet`, compiles the provider, executes the generated handler, and runs
 Terraform Plugin Testing acceptance cases over protocol v6. The acceptance
 suite verifies both default and custom output directories, independently
 inspects each generated ZIP, checks its hash and size, and requires a repeated
-plan to be empty.
+plan to be empty. Acceptance cases run without external build tools on `PATH`
+and also check that legacy `rolldown_path` configuration is ignored.
 
 For local Terraform development, build the binary and configure a Terraform
 CLI `dev_overrides` entry for `terrable-hq/packager`.
 
 ## Releases
 
-Published GitHub prereleases are available for
-[v0.2.0 (embedded esbuild)](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
-and [v0.1.0 (external Rolldown)](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.1.0).
+The [v0.2.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
+includes embedded esbuild. The older
+[v0.1.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.1.0)
+requires external Rolldown.
 
 Tagged releases use GoReleaser v2.18.0 to build Linux, macOS, and Windows
 archives for AMD64 and ARM64, sign their checksums, and create a draft GitHub
