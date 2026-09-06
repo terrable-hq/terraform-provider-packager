@@ -1,6 +1,6 @@
 GORELEASER ?= goreleaser
 
-.PHONY: build check-fmt ci fmt release-check release-snapshot test test-acceptance test-integration test-race vet
+.PHONY: build check-fmt ci fmt release-check release-snapshot test test-acceptance test-integration test-race test-release-plan vet
 
 build:
 	go build -o terraform-provider-packager .
@@ -26,7 +26,10 @@ test-acceptance:
 test-integration:
 	PACKAGER_INTEGRATION=1 go test ./internal/bundle -run '^TestEmbeddedBundleExecutesInNode$$' -count=1 -v
 
-ci: check-fmt test-race vet build test-integration test-acceptance
+test-release-plan:
+	python3 -B -m unittest discover -s scripts -p 'test_*.py' -v
+
+ci: check-fmt test-race vet build test-integration test-acceptance test-release-plan
 
 release-check:
 	$(GORELEASER) check --config .goreleaser.yml

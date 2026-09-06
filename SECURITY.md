@@ -28,3 +28,17 @@ The Dependabot update schedule is owned by `.github/dependabot.yml`.
 default setup disabled so it does not reject results from the explicit workflow.
 Secret protection, private reporting, and merge rules are managed in GitHub
 repository settings. Review changes to CI and security configuration carefully.
+
+## Automated release trust boundary
+
+Release jobs run only for this repository's `main` branch. The `publish`
+environment restricts signing and App credentials to that branch. Builds have
+no release credentials; a fresh publishing job validates artifacts from its
+own build and does not check out or run repository code. PR and fork artifacts
+are never promoted to releases.
+
+New commits dismiss PR approvals, and the latest push requires review.
+Workflow and release-code changes also require CODEOWNERS review. Inspect the
+final revision before merging; workflow-run approval is not merge approval.
+See [RELEASING.md](RELEASING.md) for the App's limited tag-creation authority
+and the retained administrator review exemption.

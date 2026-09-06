@@ -1,0 +1,6 @@
+# Changes to release authority and executable build inputs need maintainer review.
+/.github/ @callumevans
+/.goreleaser.yml @callumevans
+/Makefile @callumevans
+/scripts/ @callumevans
+/tests/release/ @callumevans
