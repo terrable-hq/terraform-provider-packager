@@ -51,7 +51,7 @@ release:
   github:
     owner: terrable-hq
     name: terraform-provider-packager
-  # Inspect the signed assets before publishing the release to the Registry.
+  # Local/manual invocations remain drafts; CI publishes verified assets separately.
   draft: true
   extra_files:
     - glob: terraform-registry-manifest.json

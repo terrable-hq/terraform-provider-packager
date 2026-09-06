@@ -129,8 +129,9 @@ CLI `dev_overrides` entry for `terrable-hq/packager`.
 
 ## Releases
 
-Tagged releases use GoReleaser v2.18.0 to build Linux, macOS, and Windows
-archives for AMD64 and ARM64, sign their checksums, and create a draft GitHub
-release. CI also builds unsigned snapshots without access to release secrets.
-See [RELEASING.md](RELEASING.md) for signing-key setup, checks, and the first
-Registry publication.
+Changes merged into `main` automatically produce signed preview releases after
+CI passes. Documentation-only changes are skipped; other changes increment the
+patch version. An explicit version can be selected through the Release workflow.
+GoReleaser v2.18.0 builds Linux, macOS, and Windows archives for AMD64 and ARM64.
+See [RELEASING.md](RELEASING.md) for release credentials, security protections,
+and recovery instructions.
