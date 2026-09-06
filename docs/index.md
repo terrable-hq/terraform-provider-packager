@@ -19,10 +19,6 @@ before running Terraform (typically with `npm ci`). Package installation,
 JavaScript bundler plugins/configuration and native-addon packaging are not
 performed by this provider. Lambda still needs its Node.js runtime.
 
-When upgrading from v0.1.0, remove `rolldown_path`; it is deprecated and ignored.
-The engine change updates generated JavaScript and ZIP hashes, while preserving
-the input/output interface and deterministic packaging for unchanged inputs.
-
 ## Example usage
 
 ```terraform

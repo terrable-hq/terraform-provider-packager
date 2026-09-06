@@ -19,7 +19,6 @@ type bundleDataSourceModel struct {
 	Entrypoint       types.String `tfsdk:"entrypoint"`
 	WorkingDirectory types.String `tfsdk:"working_directory"`
 	OutputDirectory  types.String `tfsdk:"output_directory"`
-	RolldownPath     types.String `tfsdk:"rolldown_path"`
 	ArtifactPath     types.String `tfsdk:"artifact_path"`
 	Base64SHA256     types.String `tfsdk:"base64sha256"`
 	Size             types.Int64  `tfsdk:"size"`
@@ -53,11 +52,6 @@ func (d *bundleDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"output_directory": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Directory for generated artifacts. Defaults to `.terrable/build` beneath `working_directory`.",
-			},
-			"rolldown_path": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Deprecated compatibility field. Ignored: esbuild is compiled into the provider.",
-				DeprecationMessage:  "Remove rolldown_path. Bundling now uses embedded esbuild and this executable path is ignored.",
 			},
 			"artifact_path": schema.StringAttribute{
 				Computed:            true,

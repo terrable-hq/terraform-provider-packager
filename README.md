@@ -84,17 +84,6 @@ Native addons and extra assets are not automatically packaged; builds that
 emit multiple files, such as CSS, fail rather than silently dropping files.
 TypeScript is transpiled, not type-checked.
 
-### Migrating from v0.1.0
-
-Remove `rolldown_path` from configuration. It is retained as a deprecated,
-ignored compatibility field; it no longer runs an executable. Remove a
-Rolldown dev dependency only if your application doesn't otherwise use it.
-
-Input paths, `output_directory`, ZIP layout and output attributes are unchanged.
-The switch to esbuild changes generated JavaScript and therefore artifact
-hashes; expect a one-time Lambda code update. Repeated builds with the same
-inputs and provider version remain deterministic.
-
 The data source writes its artifact when Terraform reads it, normally during
 planning. If plan and apply run on different machines, preserve
 `.terrable/build` between those stages or rebuild the plan on the apply runner.
@@ -133,18 +122,12 @@ This checks formatting, runs the Go suite with the race detector, runs
 Terraform Plugin Testing acceptance cases over protocol v6. The acceptance
 suite verifies both default and custom output directories, independently
 inspects each generated ZIP, checks its hash and size, and requires a repeated
-plan to be empty. Acceptance cases run without external build tools on `PATH`
-and also check that legacy `rolldown_path` configuration is ignored.
+plan to be empty. Acceptance cases run without external build tools on `PATH`.
 
 For local Terraform development, build the binary and configure a Terraform
 CLI `dev_overrides` entry for `terrable-hq/packager`.
 
 ## Releases
-
-The [v0.2.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.2.0)
-includes embedded esbuild. The older
-[v0.1.0 prerelease](https://github.com/terrable-hq/terraform-provider-packager/releases/tag/v0.1.0)
-requires external Rolldown.
 
 Tagged releases use GoReleaser v2.18.0 to build Linux, macOS, and Windows
 archives for AMD64 and ARM64, sign their checksums, and create a draft GitHub

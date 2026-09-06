@@ -37,8 +37,6 @@ data "packager_bundle" "handler" {
   to the Terraform process working directory.
 - `output_directory` (optional): artifact directory. Defaults to
   `.terrable/build` beneath `working_directory`.
-- `rolldown_path` (optional, deprecated): ignored compatibility field for
-  v0.1.0 configurations. Remove it; esbuild is compiled into the provider.
 
 ## Attributes
 

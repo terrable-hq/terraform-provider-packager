@@ -57,21 +57,6 @@ func TestAccBundleDataSourceCustomOutput(t *testing.T) {
 	})
 }
 
-func TestAccBundleDataSourceLegacyRolldownPath(t *testing.T) {
-	workingDirectory := prepareAcceptanceFixture(t)
-	config := strings.Replace(acceptanceBundleConfig(workingDirectory, ""),
-		`  name              = "acceptance"`,
-		`  name              = "acceptance"
-  rolldown_path = "/does/not/exist/rolldown"`, 1)
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acceptanceProviderFactories(),
-		Steps: []resource.TestStep{{
-			Config: config,
-			Check:  acceptanceBundleChecks(filepath.Join(workingDirectory, ".terrable", "build", "acceptance.zip")),
-		}},
-	})
-}
-
 func prepareAcceptanceFixture(t *testing.T) string {
 	t.Helper()
 	if os.Getenv("TF_ACC") != "1" {

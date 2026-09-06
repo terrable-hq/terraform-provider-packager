@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	frameworkprovider "github.com/hashicorp/terraform-plugin-framework/provider"
 )
 
@@ -52,7 +51,7 @@ func TestBundleDataSourceSchemaContract(t *testing.T) {
 		}
 	}
 
-	optional := []string{"working_directory", "output_directory", "rolldown_path"}
+	optional := []string{"working_directory", "output_directory"}
 	for _, name := range optional {
 		attribute, ok := response.Schema.Attributes[name]
 		if !ok {
@@ -72,9 +71,5 @@ func TestBundleDataSourceSchemaContract(t *testing.T) {
 		if !attribute.IsComputed() {
 			t.Fatalf("attribute %q is not computed", name)
 		}
-	}
-	legacy := response.Schema.Attributes["rolldown_path"].(schema.StringAttribute)
-	if legacy.DeprecationMessage == "" {
-		t.Fatal("rolldown_path must be deprecated now that bundling is embedded")
 	}
 }
