@@ -1,1 +1,1 @@
-export const message = "Hello from Rolldown";
+export const message = "Hello from Terrable";

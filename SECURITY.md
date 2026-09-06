@@ -9,7 +9,7 @@ version, impact, and a minimal reproduction without real secrets.
 
 ## Automated checks
 
-Dependabot checks GitHub Actions, Go modules, and npm development dependencies
+Dependabot checks GitHub Actions and Go modules
 weekly. Minor and patch Go updates are grouped; major updates remain separate.
 Dependabot security updates are enabled independently of that weekly schedule.
 Dependency updates go through pull requests and the normal CI requirements;

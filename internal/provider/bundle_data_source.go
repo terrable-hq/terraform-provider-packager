@@ -19,13 +19,12 @@ type bundleDataSourceModel struct {
 	Entrypoint       types.String `tfsdk:"entrypoint"`
 	WorkingDirectory types.String `tfsdk:"working_directory"`
 	OutputDirectory  types.String `tfsdk:"output_directory"`
-	RolldownPath     types.String `tfsdk:"rolldown_path"`
 	ArtifactPath     types.String `tfsdk:"artifact_path"`
 	Base64SHA256     types.String `tfsdk:"base64sha256"`
 	Size             types.Int64  `tfsdk:"size"`
 }
 
-// NewBundleDataSource returns the Rolldown bundle data source.
+// NewBundleDataSource returns the embedded esbuild bundle data source.
 func NewBundleDataSource() datasource.DataSource {
 	return &bundleDataSource{}
 }
@@ -36,7 +35,7 @@ func (d *bundleDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (d *bundleDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Bundles one JavaScript or TypeScript entrypoint with Rolldown and writes a deterministic Lambda ZIP artifact.",
+		MarkdownDescription: "Bundles one JavaScript or TypeScript entrypoint with embedded esbuild and writes a deterministic Lambda ZIP artifact. No external bundler or Node.js installation is required for bundling.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -53,10 +52,6 @@ func (d *bundleDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"output_directory": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Directory for generated artifacts. Defaults to `.terrable/build` beneath `working_directory`.",
-			},
-			"rolldown_path": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Explicit Rolldown executable. By default the provider checks `node_modules/.bin/rolldown` and then PATH.",
 			},
 			"artifact_path": schema.StringAttribute{
 				Computed:            true,
@@ -86,7 +81,7 @@ func (d *bundleDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		Entrypoint:       config.Entrypoint.ValueString(),
 		WorkingDirectory: optionalString(config.WorkingDirectory),
 		OutputDirectory:  optionalString(config.OutputDirectory),
-	}, bundle.RolldownRunner{Executable: optionalString(config.RolldownPath)})
+	}, bundle.EsbuildRunner{})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to package function", err.Error())
 		return

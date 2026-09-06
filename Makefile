@@ -24,7 +24,7 @@ test-acceptance:
 	TF_ACC=1 go test ./internal/provider -run '^TestAcc' -v -timeout 10m
 
 test-integration:
-	PACKAGER_INTEGRATION=1 go test ./internal/bundle -run TestRolldownBuildsTypeScriptLambdaArtifact -v
+	PACKAGER_INTEGRATION=1 go test ./internal/bundle -run '^TestEmbeddedBundleExecutesInNode$$' -count=1 -v
 
 ci: check-fmt test-race vet build test-integration test-acceptance
 

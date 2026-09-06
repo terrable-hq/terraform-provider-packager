@@ -51,7 +51,7 @@ func TestBundleDataSourceSchemaContract(t *testing.T) {
 		}
 	}
 
-	optional := []string{"working_directory", "output_directory", "rolldown_path"}
+	optional := []string{"working_directory", "output_directory"}
 	for _, name := range optional {
 		attribute, ok := response.Schema.Attributes[name]
 		if !ok {
